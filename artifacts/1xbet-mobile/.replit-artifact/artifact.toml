@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "1xBet Mobile Clone"
+version = "1.0.0"
+id = "artifacts/1xbet-mobile"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24262
+
+[services.development]
+run = "pnpm --filter @workspace/1xbet-mobile run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/1xbet-mobile", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/1xbet-mobile/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24262"
+BASE_PATH = "/"
