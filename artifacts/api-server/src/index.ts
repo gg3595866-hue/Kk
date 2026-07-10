@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { startTor } from "./lib/tor";
 
 const rawPort = process.env["PORT"];
 
@@ -20,6 +21,10 @@ app.listen(port, (err) => {
     logger.error({ err }, "Error listening on port");
     process.exit(1);
   }
-
   logger.info({ port }, "Server listening");
+});
+
+// Start Tor in the background — proxy endpoints return 503 until it's ready
+startTor().catch((err) => {
+  logger.error({ err }, "Tor failed to start — proxy will be unavailable");
 });
