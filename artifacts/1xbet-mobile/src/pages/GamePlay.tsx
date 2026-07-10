@@ -11,7 +11,7 @@ export function GamePlay({ params }: GamePlayProps) {
   const { slug } = params;
   const game = GAMES.find((g) => g.slug === slug);
   const gradient = game ? CATEGORY_GRADIENTS[game.category] : 'from-gray-700 to-gray-900';
-  const gameUrl = `https://1xbet.com/en/games/${slug}`;
+  const gameUrl = `https://1x-bet.mobi/en/games/${slug}`;
 
   return (
     <div className="flex flex-col h-screen bg-background">
