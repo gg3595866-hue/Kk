@@ -8,13 +8,14 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      width: 280px;
+      width: 300px;
       background: #0a0e14;
       color: #fff;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       font-size: 13px;
     }
 
+    /* ── Header ── */
     .header {
       background: #111827;
       padding: 12px 16px;
@@ -23,71 +24,53 @@
       gap: 10px;
       border-bottom: 1px solid #1f2937;
     }
-
-    .logo {
-      font-size: 18px;
-      font-weight: 900;
-      font-style: italic;
-      color: #f5a623;
-      letter-spacing: -0.5px;
-    }
-
+    .logo { font-size: 18px; font-weight: 900; font-style: italic; color: #f5a623; letter-spacing: -0.5px; }
     .logo span { color: #fff; }
+    .badge { margin-left: auto; background: #16a34a; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; letter-spacing: 0.5px; }
 
-    .badge {
-      margin-left: auto;
-      background: #16a34a;
-      color: #fff;
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 99px;
-      letter-spacing: 0.5px;
-    }
-
-    .section {
-      padding: 14px 16px;
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      background: #111827;
       border-bottom: 1px solid #1f2937;
     }
-
-    .section:last-child { border-bottom: none; }
-
-    .section-title {
-      font-size: 10px;
+    .tab {
+      flex: 1;
+      padding: 9px 0;
+      text-align: center;
+      font-size: 11px;
       font-weight: 700;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
       color: #6b7280;
-      margin-bottom: 8px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
     }
+    .tab.active { color: #f5a623; border-bottom-color: #f5a623; }
 
-    .status-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 6px;
-    }
+    /* ── Panels ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
 
+    /* ── Section ── */
+    .section { padding: 14px 16px; border-bottom: 1px solid #1f2937; }
+    .section:last-child { border-bottom: none; }
+    .section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #6b7280; margin-bottom: 8px; }
+
+    /* ── Status rows ── */
+    .status-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .status-row:last-child { margin-bottom: 0; }
     .status-row .label { color: #d1d5db; }
-
-    .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #16a34a;
-      display: inline-block;
-      margin-right: 6px;
-      box-shadow: 0 0 4px #16a34a;
-    }
-
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #16a34a; display: inline-block; margin-right: 6px; box-shadow: 0 0 4px #16a34a; }
     .dot.off { background: #6b7280; box-shadow: none; }
+    .on  { color: #16a34a; font-weight: 700; }
+    .off { color: #6b7280; font-weight: 700; }
 
-    .hint {
-      font-size: 11px;
-      color: #6b7280;
-      line-height: 1.5;
-    }
-
-    .url-input {
+    /* ── Connection form ── */
+    .form-row { margin-bottom: 10px; }
+    .form-label { font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #6b7280; margin-bottom: 4px; display: block; }
+    .form-input, .form-select {
       width: 100%;
       background: #1f2937;
       border: 1px solid #374151;
@@ -96,67 +79,136 @@
       padding: 7px 10px;
       font-size: 12px;
       outline: none;
-      margin-top: 6px;
     }
+    .form-input:focus, .form-select:focus { border-color: #f5a623; }
+    .form-select option { background: #1f2937; }
 
-    .url-input:focus { border-color: #f5a623; }
+    .row-2 { display: grid; grid-template-columns: 1fr 80px; gap: 8px; }
 
-    .save-btn {
-      margin-top: 8px;
-      width: 100%;
-      background: #f5a623;
-      color: #000;
-      border: none;
-      border-radius: 6px;
-      padding: 7px;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      cursor: pointer;
-      text-transform: uppercase;
+    /* ── Toggle ── */
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .toggle-row .toggle-label { color: #d1d5db; font-weight: 600; }
+    .toggle {
+      position: relative; width: 40px; height: 22px;
     }
-
-    .save-btn:active { opacity: 0.85; }
-
-    .saved-msg {
-      text-align: center;
-      color: #16a34a;
-      font-size: 11px;
-      margin-top: 6px;
-      display: none;
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0;
+      background: #374151; border-radius: 22px; cursor: pointer; transition: background 0.2s;
     }
+    .slider::before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; left: 3px; top: 3px;
+      background: #fff; border-radius: 50%; transition: transform 0.2s;
+    }
+    .toggle input:checked + .slider { background: #f5a623; }
+    .toggle input:checked + .slider::before { transform: translateX(18px); }
+
+    /* ── Buttons ── */
+    .btn {
+      width: 100%; border: none; border-radius: 6px;
+      padding: 8px; font-size: 12px; font-weight: 700;
+      letter-spacing: 0.5px; cursor: pointer; text-transform: uppercase; transition: opacity 0.15s;
+    }
+    .btn:active { opacity: 0.8; }
+    .btn-primary { background: #f5a623; color: #000; }
+    .btn-ghost   { background: #1f2937; color: #d1d5db; margin-top: 6px; }
+
+    /* ── Feedback messages ── */
+    .msg { text-align: center; font-size: 11px; margin-top: 8px; min-height: 16px; }
+    .msg.ok  { color: #16a34a; }
+    .msg.err { color: #ef4444; }
+
+    /* ── Proxy badge ── */
+    .proxy-info {
+      background: #1f2937; border-radius: 6px; padding: 8px 10px;
+      font-size: 11px; color: #9ca3af; margin-top: 4px; line-height: 1.5;
+    }
+    .proxy-info strong { color: #f5a623; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="logo">1x<span>BET</span></div>
-    <div class="badge">ACTIVE</div>
+
+<div class="header">
+  <div class="logo">1x<span>BET</span></div>
+  <div class="badge">ACTIVE</div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-tab="status">Status</div>
+  <div class="tab"        data-tab="connection">Connection</div>
+</div>
+
+<!-- ══ Panel: Status ══════════════════════════════════════════════════════════ -->
+<div class="panel active" id="panel-status">
+  <div class="section">
+    <div class="section-title">Interceptors</div>
+    <div class="status-row">
+      <span class="label"><span class="dot"></span>Frame unlock</span>
+      <span class="on">ON</span>
+    </div>
+    <div class="status-row">
+      <span class="label"><span class="dot"></span>Header spoof</span>
+      <span class="on">ON</span>
+    </div>
+    <div class="status-row">
+      <span class="label"><span class="dot"></span>CDN images</span>
+      <span class="on">ON</span>
+    </div>
   </div>
 
   <div class="section">
-    <div class="section-title">Status</div>
+    <div class="section-title">Connection</div>
     <div class="status-row">
-      <span class="label"><span class="dot" id="dot-frame"></span>Frame unlock</span>
-      <span style="color:#16a34a;font-weight:700">ON</span>
+      <span class="label"><span class="dot" id="proxy-dot"></span>Proxy route</span>
+      <span id="proxy-status" class="off">OFF</span>
     </div>
-    <div class="status-row">
-      <span class="label"><span class="dot" id="dot-proxy"></span>Proxy redirect</span>
-      <span style="color:#16a34a;font-weight:700">ON</span>
-    </div>
-    <div class="status-row">
-      <span class="label"><span class="dot" id="dot-cdn"></span>CDN images</span>
-      <span style="color:#16a34a;font-weight:700">ON</span>
-    </div>
+    <div id="proxy-detail" class="proxy-info" style="display:none"></div>
   </div>
+</div>
 
+<!-- ══ Panel: Connection ══════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-connection">
   <div class="section">
-    <div class="section-title">App URL</div>
-    <p class="hint">Paste your Replit app URL so the extension knows which page to activate on.</p>
-    <input id="app-url" class="url-input" type="url" placeholder="https://your-replit-url.repl.co" />
-    <button class="save-btn" id="save-btn">Save</button>
-    <div class="saved-msg" id="saved-msg">✓ Saved</div>
-  </div>
+    <div class="section-title">Proxy Server</div>
+    <p style="color:#6b7280;font-size:11px;margin-bottom:12px;line-height:1.5">
+      Route all 1x-bet.mobi traffic through a proxy so games load with your IP, not the server's.
+    </p>
 
-  <script src="popup.js"></script>
+    <div class="toggle-row">
+      <span class="toggle-label">Enable proxy</span>
+      <label class="toggle">
+        <input type="checkbox" id="proxy-enabled" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Protocol</label>
+      <select id="proxy-type" class="form-select">
+        <option value="http">HTTP / HTTPS</option>
+        <option value="socks5">SOCKS5</option>
+      </select>
+    </div>
+
+    <div class="row-2">
+      <div class="form-row">
+        <label class="form-label">Host</label>
+        <input id="proxy-host" class="form-input" type="text" placeholder="proxy.example.com" />
+      </div>
+      <div class="form-row">
+        <label class="form-label">Port</label>
+        <input id="proxy-port" class="form-input" type="number" placeholder="8080" min="1" max="65535" />
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="save-proxy">Save &amp; Apply</button>
+    <button class="btn btn-ghost"   id="clear-proxy">Clear Proxy</button>
+    <div class="msg" id="proxy-msg"></div>
+  </div>
+</div>
+
+<script src="popup.js"></script>
 </body>
 </html>

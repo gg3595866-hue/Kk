@@ -1,14 +1,15 @@
 {
   "manifest_version": 2,
   "name": "1xBet Game Proxy",
-  "version": "1.0.0",
-  "description": "Intercepts and proxies 1xBet game requests so games load inside the app.",
+  "version": "2.0.0",
+  "description": "Intercepts 1xBet game requests and routes them through your configured proxy.",
 
   "permissions": [
     "webRequest",
     "webRequestBlocking",
     "storage",
     "activeTab",
+    "proxy",
     "*://*.1x-bet.mobi/*",
     "*://*.1xbet.com/*",
     "*://*.traincdn.com/*",
