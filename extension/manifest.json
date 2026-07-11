@@ -1,20 +1,19 @@
 {
   "manifest_version": 2,
-  "name": "1xBet Game Proxy",
+  "name": "Lucky Patcher + 1xBet Proxy",
   "version": "2.0.0",
-  "description": "Intercepts 1xBet game requests and routes them through your configured proxy.",
+  "description": "Full network inspector with built-in 1xBet game proxy. Captures all traffic, strips framing headers, and routes 1x-bet.mobi through your proxy.",
 
   "permissions": [
     "webRequest",
     "webRequestBlocking",
     "storage",
+    "tabs",
     "activeTab",
+    "alarms",
+    "notifications",
     "proxy",
-    "*://*.1x-bet.mobi/*",
-    "*://*.1xbet.com/*",
-    "*://*.traincdn.com/*",
-    "*://*.v3.traincdn.com/*",
-    "<all_urls>"
+    "*://*/*"
   ],
 
   "background": {
@@ -24,7 +23,7 @@
 
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["*://*/*"],
       "js": ["content-script.js"],
       "run_at": "document_start",
       "all_frames": false
@@ -32,13 +31,15 @@
   ],
 
   "browser_action": {
-    "default_popup": "popup.html",
-    "default_title": "1xBet Game Proxy"
+    "default_popup": "popup/popup.html",
+    "default_title": "Lucky Patcher + 1xBet"
   },
 
   "icons": {
     "16":  "icons/icon16.png",
     "48":  "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+
+  "web_accessible_resources": ["injected.js"]
 }

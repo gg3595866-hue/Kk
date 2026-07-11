@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lucky Patcher</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <div class="header-left">
+        <span class="logo">&#9670; Lucky Patcher</span>
+        <span class="counter" id="totalCounter">0</span>
+      </div>
+      <div class="header-right">
+        <button class="btn-icon" id="btnPause" title="Pause/Resume">&#9646;&#9646;</button>
+        <button class="btn-icon" id="btnClear" title="Clear">&#10006;</button>
+        <button class="btn-icon" id="btnExport" title="Export JSON">&#8595;</button>
+      </div>
+    </header>
+
+    <div class="search-bar">
+      <input type="search" id="searchInput" placeholder="Filter by domain, URL, keyword..." />
+    </div>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="all">All <span class="tab-count" id="countAll">0</span></button>
+      <button class="tab" data-tab="http">HTTP <span class="tab-count" id="countHttp">0</span></button>
+      <button class="tab" data-tab="xhr">XHR <span class="tab-count" id="countXhr">0</span></button>
+      <button class="tab" data-tab="fetch">Fetch <span class="tab-count" id="countFetch">0</span></button>
+      <button class="tab" data-tab="websocket">WS <span class="tab-count" id="countWs">0</span></button>
+      <button class="tab" data-tab="iframe">iframe <span class="tab-count" id="countIframe">0</span></button>
+      <button class="tab" data-tab="dom">DOM <span class="tab-count" id="countDom">0</span></button>
+      <button class="tab tab-stack" data-tab="stack">&#9670; Stack <span class="tab-count" id="countStack">0</span></button>
+      <button class="tab tab-mitm" data-tab="mitm">&#9888; MITM <span class="tab-count" id="countMitm">0</span></button>
+      <button class="tab tab-repeater" data-tab="repeater">&#128225; Repeater</button>
+      <button class="tab tab-cache" data-tab="cache">&#128274; Cache <span class="tab-count" id="countCache">0</span></button>
+      <button class="tab" data-tab="stats">Stats</button>
+      <button class="tab tab-xbet" data-tab="xbet">&#127922; 1xBet</button>
+    </nav>
+
+    <!-- Stats Panel -->
+    <div id="panelStats" class="panel hidden">
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="section-title">Top Domains</div>
+      <ul class="domain-list" id="domainList"></ul>
+      <div class="section-title">Resource Types</div>
+      <ul class="type-list" id="typeList"></ul>
+    </div>
+
+    <!-- Stack Fingerprint Panel -->
+    <div id="panelStack" class="panel hidden"></div>
+
+    <!-- MITM Panel -->
+    <div id="panelMitm" class="panel hidden">
+
+      <!-- ① Rule builder -->
+      <div class="mitm-rule-builder">
+        <div class="mitm-builder-title">&#9888; Intercept Rules</div>
+        <div class="mitm-form-row">
+          <input type="text" id="mitmPattern" placeholder="URL pattern  e.g. /api/login" class="mitm-input" />
+          <label class="mitm-regex-label"><input type="checkbox" id="mitmIsRegex" /> Regex</label>
+        </div>
+        <div class="mitm-form-row">
+          <select id="mitmAction" class="mitm-select">
+            <option value="intercept">&#9654; Intercept (hold &amp; edit)</option>
+            <option value="highlight">Highlight</option>
+            <option value="block">Block (flag)</option>
+            <option value="log">Log only</option>
+          </select>
+          <input type="text" id="mitmName" placeholder="Label (optional)" class="mitm-input" />
+          <button id="btnAddRule" class="mitm-btn-add">+ Add</button>
+        </div>
+      </div>
+
+      <!-- ② Active rules list -->
+      <div id="mitmRulesList" class="mitm-rules-list"></div>
+
+      <!-- ③ Intercept queue — requests held for user modification -->
+      <div id="mitmInterceptSection" class="hidden">
+        <div class="section-title mitm-matches-title">
+          &#9654; Held Requests
+          <span id="interceptQueueCount" class="intercept-badge">0</span>
+        </div>
+        <div id="mitmInterceptList" class="mitm-intercept-list"></div>
+      </div>
+
+      <!-- ④ Matched (tagged) captures -->
+      <div class="section-title mitm-matches-title">
+        &#128247; Matched Captures
+        <span id="mitmMatchCount" style="color:var(--mitm);font-weight:700">0</span>
+      </div>
+      <div id="mitmMatchList" class="capture-list"></div>
+      <div id="mitmEmpty" class="empty-state">
+        <div class="empty-icon">&#9888;</div>
+        <div>No rules yet</div>
+        <div style="font-size:10px;color:var(--text3)">Add a URL pattern above to intercept matching requests</div>
+      </div>
+    </div>
+
+    <!-- Repeater Panel -->
+    <div id="panelRepeater" class="panel hidden">
+      <div class="rpt-layout">
+
+        <!-- ── Request builder ── -->
+        <div class="rpt-request">
+          <div class="rpt-row-url">
+            <select id="rptMethod" class="rpt-method-select">
+              <option>GET</option><option>POST</option><option>PUT</option>
+              <option>PATCH</option><option>DELETE</option><option>HEAD</option><option>OPTIONS</option>
+            </select>
+            <input id="rptUrl" type="text" class="rpt-url-input" placeholder="https://example.com/api/endpoint" />
+            <button id="rptSendBtn" class="rpt-send-btn">&#9654; Send</button>
+          </div>
+          <div class="rpt-section-label">Headers <span class="rpt-hint">(JSON)</span></div>
+          <textarea id="rptHeaders" class="rpt-textarea rpt-headers" rows="3" placeholder="{}">{}</textarea>
+          <div class="rpt-section-label">Body / Payload</div>
+          <textarea id="rptBody" class="rpt-textarea rpt-body" rows="5" placeholder="(empty for GET)"></textarea>
+        </div>
+
+        <!-- ── Response viewer ── -->
+        <div class="rpt-response hidden" id="rptResponseArea">
+          <div class="rpt-section-label rpt-response-label">
+            Response
+            <span id="rptStatusBadge" class="rpt-status-badge"></span>
+            <span id="rptTimeBadge"   class="rpt-time-badge"></span>
+          </div>
+          <pre id="rptResponseBody" class="rpt-response-body"></pre>
+        </div>
+
+        <!-- ── History ── -->
+        <div class="rpt-history-wrap" id="rptHistoryWrap">
+          <div class="rpt-section-label">History</div>
+          <div id="rptHistoryList" class="rpt-history-list"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Cache / Held Network Panel -->
+    <div id="panelCache" class="panel hidden">
+      <div class="cache-subtabs">
+        <button class="cache-subtab active" data-subtab="held">&#9654; Held <span id="cacheHeldCount" class="cache-subtab-count">0</span></button>
+        <button class="cache-subtab" data-subtab="hits">&#9889; HTTP Cache <span id="cacheHitCount" class="cache-subtab-count">0</span></button>
+        <button class="cache-subtab" data-subtab="storage">&#128274; Storage <span id="cacheStorageCount" class="cache-subtab-count">0</span></button>
+        <button class="cache-subtab" data-subtab="server">&#127758; Server <span id="cacheServerCount" class="cache-subtab-count">0</span></button>
+      </div>
+
+      <!-- Held requests sub-panel -->
+      <div id="cacheSubHeld" class="cache-sub-panel">
+        <div id="cacheHeldList" class="capture-list"></div>
+        <div id="cacheHeldEmpty" class="empty-state hidden">
+          <div class="empty-icon">&#9654;</div>
+          <div>No held requests</div>
+          <div style="font-size:10px;color:var(--text3)">Add an Intercept rule in the MITM tab to hold matching requests here</div>
+        </div>
+      </div>
+
+      <!-- HTTP cache hits sub-panel -->
+      <div id="cacheSubHits" class="cache-sub-panel hidden">
+        <div id="cacheHitList" class="capture-list"></div>
+        <div id="cacheHitEmpty" class="empty-state hidden">
+          <div class="empty-icon">&#9889;</div>
+          <div>No cache hits yet</div>
+          <div style="font-size:10px;color:var(--text3)">HTTP responses served from browser cache appear here</div>
+        </div>
+      </div>
+
+      <!-- Cache Storage API sub-panel -->
+      <div id="cacheSubStorage" class="cache-sub-panel hidden">
+        <div class="cache-scan-row">
+          <button id="btnEnumCache" class="cache-scan-btn">&#128270; Scan active tab caches</button>
+          <span id="cacheScanStatus" class="cache-scan-status"></span>
+        </div>
+        <div id="cacheStorageGroupList"></div>
+        <div id="cacheStorageEmpty" class="empty-state hidden">
+          <div class="empty-icon">&#128274;</div>
+          <div>No cache entries</div>
+          <div style="font-size:10px;color:var(--text3)">Click Scan to enumerate the active tab's Cache Storage API</div>
+        </div>
+      </div>
+      <!-- Server-side cache sub-panel -->
+      <div id="cacheSubServer" class="cache-sub-panel hidden">
+        <div id="cacheServerList"></div>
+        <div id="cacheServerEmpty" class="empty-state hidden">
+          <div class="empty-icon">&#127758;</div>
+          <div>No server cache data yet</div>
+          <div style="font-size:10px;color:var(--text3)">Server-side CDN, proxy, and RAM cache layers appear here as requests are captured</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1xBet Proxy Panel -->
+    <div id="panelXbet" class="panel hidden">
+
+      <!-- Connection status -->
+      <div class="xbet-section">
+        <div class="xbet-header">
+          <span class="xbet-logo">1x<b>BET</b></span>
+          <span class="xbet-badge" id="xbetBadge">CHECKING…</span>
+        </div>
+
+        <div class="xbet-status-row">
+          <span class="xbet-dot xbet-dot-on"></span> Frame unlock
+          <span class="xbet-val-on">ON</span>
+        </div>
+        <div class="xbet-status-row">
+          <span class="xbet-dot xbet-dot-on"></span> Header spoof
+          <span class="xbet-val-on">ON</span>
+        </div>
+        <div class="xbet-status-row">
+          <span class="xbet-dot xbet-dot-on"></span> CDN images
+          <span class="xbet-val-on">ON</span>
+        </div>
+        <div class="xbet-status-row">
+          <span class="xbet-dot" id="xbetConnDot"></span> App connection
+          <span id="xbetConnLabel" class="xbet-val-off">–</span>
+        </div>
+        <div class="xbet-status-row">
+          <span class="xbet-dot" id="xbetProxyDot"></span> Proxy route
+          <span id="xbetProxyLabel" class="xbet-val-off">OFF</span>
+        </div>
+        <div id="xbetLastPingInfo" style="font-size:10px;color:var(--text3);margin-top:4px"></div>
+      </div>
+
+      <!-- App URL -->
+      <div class="xbet-section">
+        <div class="xbet-section-title">App URL</div>
+        <p style="font-size:10px;color:var(--text3);margin-bottom:6px">Your Replit app URL — the extension pings it every 30 s so messages appear in the project logs.</p>
+        <input id="xbetAppUrl" type="url" class="xbet-input" placeholder="https://your-app.replit.dev" />
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="xbet-btn xbet-btn-primary" id="xbetSaveUrl" style="flex:1">Save &amp; Ping</button>
+          <button class="xbet-btn xbet-btn-ghost" id="xbetPingNow">Ping Now</button>
+        </div>
+        <div class="xbet-msg" id="xbetUrlMsg"></div>
+      </div>
+
+      <!-- Proxy config -->
+      <div class="xbet-section">
+        <div class="xbet-section-title">Proxy Server</div>
+        <p style="font-size:10px;color:var(--text3);margin-bottom:8px">Route all 1x-bet.mobi traffic through a proxy so games load with your IP.</p>
+
+        <div class="xbet-toggle-row">
+          <span style="color:var(--text1);font-weight:600">Enable proxy</span>
+          <label class="xbet-toggle">
+            <input type="checkbox" id="xbetProxyEnabled" />
+            <span class="xbet-slider"></span>
+          </label>
+        </div>
+
+        <div class="xbet-form-row">
+          <span class="xbet-form-label">Protocol</span>
+          <select id="xbetProxyType" class="xbet-select">
+            <option value="http">HTTP / HTTPS</option>
+            <option value="socks5">SOCKS5</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 80px;gap:6px">
+          <div class="xbet-form-row">
+            <span class="xbet-form-label">Host</span>
+            <input id="xbetProxyHost" class="xbet-input" type="text" placeholder="proxy.example.com" />
+          </div>
+          <div class="xbet-form-row">
+            <span class="xbet-form-label">Port</span>
+            <input id="xbetProxyPort" class="xbet-input" type="number" placeholder="8080" min="1" max="65535" />
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <button class="xbet-btn xbet-btn-primary" id="xbetSaveProxy" style="flex:1">Save &amp; Apply</button>
+          <button class="xbet-btn xbet-btn-ghost"   id="xbetClearProxy">Clear</button>
+        </div>
+        <div class="xbet-msg" id="xbetProxyMsg"></div>
+      </div>
+    </div>
+
+    <!-- Captures List -->
+    <div id="panelList" class="panel">
+      <div id="captureList" class="capture-list"></div>
+      <div id="loadMore" class="load-more hidden">
+        <button id="btnLoadMore">Load more</button>
+      </div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div id="panelDetail" class="panel hidden">
+      <button class="back-btn" id="btnBack">&#8592; Back</button>
+      <div id="detailContent" class="detail-content"></div>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
