@@ -34,12 +34,11 @@ export function GamePlay({ params }: GamePlayProps) {
     return () => { document.removeEventListener('1xbet-ext-ready', handler); clearTimeout(t); };
   }, []);
 
-  // When the extension is present it:
-  //   1. Intercepts /api/proxy/… and redirects to https://1x-bet.mobi/…
-  //   2. Strips X-Frame-Options / CSP so the iframe can embed the game
-  // Without the extension we still attempt the server-side Tor proxy.
-  const iframeSrc = `/api/proxy/en/games/${slug}`;
+  // When the extension is present it strips X-Frame-Options / CSP from
+  // 1x-bet.mobi responses so the iframe can embed the game directly.
+  // Without the extension we fall back to the server-side proxy.
   const externalUrl = `https://1x-bet.mobi/en/games/${slug}`;
+  const iframeSrc = extReady ? externalUrl : `/api/proxy/en/games/${slug}`;
 
   return (
     <div className="flex flex-col h-screen bg-background">
