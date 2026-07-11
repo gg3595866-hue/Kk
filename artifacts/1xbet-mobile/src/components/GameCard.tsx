@@ -12,11 +12,10 @@ export function GameCard({ game }: GameCardProps) {
 
   return (
     <Link href={`/game/${game.slug}`}>
-      <div
-        data-testid={`card-game-${game.slug}`}
-        className="group relative flex flex-col overflow-hidden rounded-md bg-card border border-card-border shadow-sm active:scale-95 transition-transform duration-100 cursor-pointer"
-      >
+      <div className="group relative flex flex-col overflow-hidden rounded-md bg-card border border-card-border shadow-sm active:scale-95 transition-transform duration-100 cursor-pointer">
         <div className="relative aspect-[4/3] w-full overflow-hidden">
+          {/* Try the real CDN thumbnail — loads fine from the user's browser.
+              The extension adds CORS headers so the image is always accessible. */}
           {!imgError ? (
             <img
               src={getGameImageUrl(game.slug)}
@@ -26,6 +25,7 @@ export function GameCard({ game }: GameCardProps) {
               loading="lazy"
             />
           ) : (
+            /* Fallback: category-coloured gradient with game name */
             <div className={`absolute inset-0 bg-gradient-to-br ${gradient} flex items-end justify-start p-2`}>
               <span className="text-white text-[10px] font-bold leading-tight drop-shadow-md line-clamp-2">
                 {game.name}
@@ -33,12 +33,11 @@ export function GameCard({ game }: GameCardProps) {
             </div>
           )}
 
-          {/* Always-present bottom gradient for name legibility */}
           {!imgError && (
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
           )}
 
-          {/* Badges */}
+          {/* HOT / NEW badges */}
           <div className="absolute top-1 right-1 flex flex-col gap-1 z-10">
             {game.hot && (
               <span className="rounded-[2px] bg-primary px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary-foreground shadow">

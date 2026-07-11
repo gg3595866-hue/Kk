@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { ArrowLeft, ExternalLink, Loader2, WifiOff } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Puzzle } from 'lucide-react';
 import { GAMES, CATEGORY_GRADIENTS } from '@/data/games';
 
 interface GamePlayProps {
   params: { slug: string };
 }
 
-type ProxyStatus = 'loading' | 'ready' | 'error';
+declare global {
+  interface Window { __1XBET_EXT__?: boolean; }
+}
 
 export function GamePlay({ params }: GamePlayProps) {
   const [, setLocation] = useLocation();
@@ -15,37 +17,29 @@ export function GamePlay({ params }: GamePlayProps) {
   const game = GAMES.find((g) => g.slug === slug);
   const gradient = game ? CATEGORY_GRADIENTS[game.category] : 'from-gray-700 to-gray-900';
 
-  // Proxy URL — the API server is mounted at /api on the same domain
-  const proxyUrl = `/api/proxy/en/games/${slug}`;
-  const externalUrl = `https://1x-bet.mobi/en/games/${slug}`;
+  // Detect the Kiwi extension — it sets window.__1XBET_EXT__ at document_start
+  const [extReady, setExtReady] = useState<boolean>(
+    typeof window !== 'undefined' && !!window.__1XBET_EXT__,
+  );
 
-  const [proxyStatus, setProxyStatus] = useState<ProxyStatus>('loading');
-  const [retryCount, setRetryCount] = useState(0);
-
-  // Poll until Tor is ready (returns non-503)
   useEffect(() => {
-    let cancelled = false;
+    if (window.__1XBET_EXT__) { setExtReady(true); return; }
+    // Listen for the custom event the content script fires
+    const handler = () => setExtReady(true);
+    document.addEventListener('1xbet-ext-ready', handler);
+    // Fallback: poll once after 500 ms (content scripts can be slightly late)
+    const t = setTimeout(() => {
+      if (window.__1XBET_EXT__) setExtReady(true);
+    }, 500);
+    return () => { document.removeEventListener('1xbet-ext-ready', handler); clearTimeout(t); };
+  }, []);
 
-    async function checkProxy() {
-      try {
-        const res = await fetch(`/api/proxy/en/games/${slug}`, { method: 'HEAD' });
-        if (cancelled) return;
-        if (res.status === 503) {
-          // Tor not yet bootstrapped — retry in 3 s
-          setTimeout(() => {
-            if (!cancelled) setRetryCount((n) => n + 1);
-          }, 3000);
-        } else {
-          setProxyStatus('ready');
-        }
-      } catch {
-        if (!cancelled) setProxyStatus('error');
-      }
-    }
-
-    checkProxy();
-    return () => { cancelled = true; };
-  }, [slug, retryCount]);
+  // When the extension is present it:
+  //   1. Intercepts /api/proxy/… and redirects to https://1x-bet.mobi/…
+  //   2. Strips X-Frame-Options / CSP so the iframe can embed the game
+  // Without the extension we still attempt the server-side Tor proxy.
+  const iframeSrc = `/api/proxy/en/games/${slug}`;
+  const externalUrl = `https://1x-bet.mobi/en/games/${slug}`;
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -62,17 +56,14 @@ export function GamePlay({ params }: GamePlayProps) {
           <h1 className="text-sm font-bold uppercase italic text-white truncate font-display">
             {game?.name ?? slug}
           </h1>
-          {proxyStatus === 'loading' && (
-            <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-              <Loader2 className="w-3 h-3 animate-spin" /> Connecting via Tor…
+          {extReady ? (
+            <p className="text-[10px] text-green-400 flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400" />
+              Extension active
             </p>
-          )}
-          {proxyStatus === 'ready' && (
-            <p className="text-[10px] text-green-400">● Tor connected</p>
-          )}
-          {proxyStatus === 'error' && (
-            <p className="text-[10px] text-destructive flex items-center gap-1">
-              <WifiOff className="w-3 h-3" /> Proxy unavailable
+          ) : (
+            <p className="text-[10px] text-yellow-400 flex items-center gap-1">
+              <Puzzle className="w-3 h-3" /> Install extension for best experience
             </p>
           )}
         </div>
@@ -90,42 +81,32 @@ export function GamePlay({ params }: GamePlayProps) {
 
       {/* Game area */}
       <div className="relative flex-1 overflow-hidden">
-        {proxyStatus === 'loading' && (
-          <div className={`absolute inset-0 z-10 bg-gradient-to-br ${gradient} flex flex-col items-center justify-center gap-4`}>
-            <Loader2 className="w-10 h-10 text-white/70 animate-spin" />
-            <div className="text-center">
-              <p className="text-white/60 text-xs mb-1">Routing through Tor…</p>
-              <p className="text-white font-bold uppercase text-lg italic">{game?.name ?? slug}</p>
-            </div>
-          </div>
-        )}
-
-        {proxyStatus === 'error' && (
-          <div className={`absolute inset-0 z-10 bg-gradient-to-br ${gradient} flex flex-col items-center justify-center gap-6 px-6`}>
-            <WifiOff className="w-10 h-10 text-white/60" />
-            <div className="text-center">
-              <p className="text-white font-bold uppercase text-lg italic mb-2">{game?.name ?? slug}</p>
-              <p className="text-white/60 text-sm mb-4">Tor proxy unavailable.</p>
+        {!extReady && (
+          /* Shown behind the iframe — visible only if the iframe stays blank */
+          <div className={`absolute inset-0 -z-10 bg-gradient-to-br ${gradient} flex flex-col items-center justify-center gap-5 px-6 text-center`}>
+            <Puzzle className="w-12 h-12 text-white/50" />
+            <div>
+              <p className="text-white font-black uppercase italic text-xl mb-1">{game?.name ?? slug}</p>
+              <p className="text-white/60 text-sm mb-4">
+                Install the <strong className="text-white">1xBet Game Proxy</strong> extension in Kiwi Browser to play games directly.
+              </p>
               <a
                 href={externalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold px-6 py-3 rounded-lg uppercase text-sm tracking-wide"
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground font-bold px-5 py-2.5 rounded-lg uppercase text-sm"
               >
-                <ExternalLink className="w-4 h-4" />
-                Open Direct
+                <ExternalLink className="w-4 h-4" /> Open Direct
               </a>
             </div>
           </div>
         )}
 
-        {/* Always mount the iframe; only show it once proxy is ready */}
         <iframe
-          key={proxyUrl}
-          src={proxyStatus === 'ready' ? proxyUrl : 'about:blank'}
+          src={iframeSrc}
           title={game?.name ?? slug}
           className="w-full h-full border-none"
-          allow="fullscreen; payment"
+          allow="fullscreen; payment; autoplay"
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation"
         />
       </div>
