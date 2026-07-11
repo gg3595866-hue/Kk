@@ -41,24 +41,29 @@ function buildPac(type, host, port) {
 }
 
 function applyProxy(config) {
+  // chrome.proxy may not be available in all Chromium forks
+  if (!chrome.proxy || !chrome.proxy.settings) {
+    console.warn('[1xBet Proxy] chrome.proxy not available in this browser');
+    return;
+  }
   if (!config || !config.enabled || !config.host || !config.port) {
-    // Clear proxy — go direct
-    chrome.proxy.settings.clear({ scope: 'regular' }, () => {
-      console.log('[1xBet Proxy] proxy cleared – using DIRECT');
-    });
+    try {
+      chrome.proxy.settings.clear({ scope: 'regular' }, () => {
+        console.log('[1xBet Proxy] proxy cleared – using DIRECT');
+      });
+    } catch (e) { console.warn('[1xBet Proxy] proxy clear failed', e); }
     return;
   }
 
   const pac = buildPac(config.type || 'http', config.host, config.port);
-  chrome.proxy.settings.set(
-    {
-      value: { mode: 'pac_script', pacScript: { data: pac } },
-      scope: 'regular',
-    },
-    () => {
-      console.log('[1xBet Proxy] PAC applied →', config.type, config.host + ':' + config.port);
-    }
-  );
+  try {
+    chrome.proxy.settings.set(
+      { value: { mode: 'pac_script', pacScript: { data: pac } }, scope: 'regular' },
+      () => {
+        console.log('[1xBet Proxy] PAC applied →', config.type, config.host + ':' + config.port);
+      }
+    );
+  } catch (e) { console.warn('[1xBet Proxy] proxy set failed', e); }
 }
 
 // Load saved proxy config on startup

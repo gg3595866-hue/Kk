@@ -6,3 +6,9 @@ id = "9Mk3y4zWBhz-ZihOK43kq"
 uri = "file://extension/1xbet-proxy-extension.zip"
 type = "unspecified"
 title = "1xBet Game Proxy v2 (with Connection tab)"
+
+[[outputs]]
+id = "8KjM_R9Ojbvhr09bQxEii"
+uri = "file://1xbet-proxy-extension.zip"
+type = "unspecified"
+title = "1xBet Game Proxy v2 – fixed zip"
